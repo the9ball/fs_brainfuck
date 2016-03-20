@@ -6,7 +6,7 @@ SRC = \
 	brainfuck.fs
 
 ARGS = \
-	brainfuck.bf
+	helloworld.bf
 
 .PHONY: run
 
