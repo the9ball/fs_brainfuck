@@ -1,10 +1,28 @@
 open System
 open System.IO
 
-// 言語規定で1024だった気がする TODO:調べる
-let buf : byte array = Array.zeroCreate 1024
+type Buffer(prev : Buffer option) =
+    let prev : Buffer option = prev
+    let mutable next : Buffer option = None
+    let mutable value = ref 0
 
-let mutable ptr = 0
+    member this.GetPrev() =
+        prev
+
+    member this.GetNext() =
+        if next.IsNone then
+            next <- Some (new Buffer(Some this))
+        next
+
+    member this.Incr() = incr value
+
+    member this.Decr() = decr value
+
+    member this.GetValue() = !value
+
+    member this.GetChar() = Convert.ToChar !value
+
+let mutable currentBuffer = new Buffer(None)
 let mutable text = ""
 let mutable idx = 0
 
@@ -38,26 +56,13 @@ let gotoClose () =
 
 let exec command =
     match command with
-    | '+' ->
-        buf.[ptr] <- byte ((int buf.[ptr]) + 1)
-        //printfn "+ [%d] : %c" ptr (Convert.ToChar buf.[ptr])
-    | '-' ->
-        buf.[ptr] <- byte ((int buf.[ptr]) - 1)
-        //printfn "- [%d] : %c" ptr (Convert.ToChar buf.[ptr])
-    | '<' ->
-        ptr <- ptr - 1
-        //printfn "< [%d] : %c" ptr (Convert.ToChar buf.[ptr])
-    | '>' ->
-        ptr <- ptr + 1
-        //printfn "> [%d] : %c" ptr (Convert.ToChar buf.[ptr])
-    | '[' ->
-        if (buf.[ptr] = (byte 1)) then gotoClose()
-    | ']' ->
-        if (buf.[ptr] <> (byte 0)) then gotoOpen()
-    | '.' ->
-        //printfn ". [%d] : %d : %c" ptr buf.[ptr] (Convert.ToChar buf.[ptr])
-        printf "%c" (Convert.ToChar buf.[ptr])
-    //| ',' -> printfn ","
+    | '+' -> currentBuffer.Incr()
+    | '-' -> currentBuffer.Decr()
+    | '<' -> currentBuffer <- currentBuffer.GetPrev().Value // 今回はoption型はずす
+    | '>' -> currentBuffer <- currentBuffer.GetNext().Value // 今回はoption型はずす
+    | '[' -> if (currentBuffer.GetValue() = 0) then gotoClose()
+    | ']' -> if (currentBuffer.GetValue() <> 0) then gotoOpen()
+    | '.' -> currentBuffer.GetChar() |> printf "%c"
     | _ -> printfn "not implimented %c" command
 
     idx + 1
