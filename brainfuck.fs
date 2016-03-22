@@ -32,18 +32,18 @@ let ReadFile filename =
         |> Array.reduce (fun x y -> x + y)
     file.Replace ("\n", "")
 
-let gotoOpen (text : string, _idx : int) =
+let gotoOpen text _idx =
     let mutable idx = _idx
     let mutable nest = 1
     while 0 < nest && 0 <= idx do
         idx <- idx - 1
-        match text.[idx] with
+        match (text : string).[idx] with
         | '[' -> nest <- nest - 1
         | ']' -> nest <- nest + 1
         | _ -> ()
     idx
 
-let gotoClose (text : string, _idx : int) =
+let gotoClose (text : string) (_idx : int) =
     let mutable idx = _idx
     let mutable nest = 1
     while 0 < nest && idx <= text.Length do
@@ -70,10 +70,10 @@ let rec exec (text : string) =
         match c with
         | '[' ->
             if (currentBuffer.IsZero()) then
-                idx <- gotoClose text idx // error FS0003: This value is not a function and cannot be applied
+                idx <- gotoClose text idx
         | ']' ->
             if (not (currentBuffer.IsZero())) then
-                idx <- gotoOpen text idx // error FS0003: This value is not a function and cannot be applied
+                idx <- gotoOpen text idx
         | _ -> execCore c
         idx <- idx + 1
 
